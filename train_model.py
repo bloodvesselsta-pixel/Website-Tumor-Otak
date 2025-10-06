@@ -33,5 +33,13 @@ print("Model StackingClassifier selesai dilatih.")
 # Menyimpan model dan scaler ke dalam file
 joblib.dump(final_model, 'brain_tumor_stacking_model.pkl')
 joblib.dump(scaler, 'scaler.pkl')
+print("Model dan Scaler telah disimpan.")
 
-print("\nProses selesai! Model dan Scaler telah disimpan.")
+# --- PENAMBAHAN BARU DIMULAI DI SINI ---
+# Menghitung nilai rata-rata dari setiap kolom fitur
+default_values = x.mean().to_dict()
+
+# Menyimpan nilai rata-rata ke dalam file pkl baru
+joblib.dump(default_values, 'default_values.pkl')
+print("Nilai default (rata-rata) telah dihitung dan disimpan sebagai 'default_values.pkl'.")
+# --- AKHIR PENAMBAHAN ---
