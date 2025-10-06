@@ -6,6 +6,11 @@ import joblib
 # Page configuration MUST be the first Streamlit command
 st.set_page_config(page_title="Brain Tumor Prediction", layout="wide", initial_sidebar_state="expanded")
 
+# --- PENAMBAHAN BARU 1: Inisialisasi Riwayat (History) ---
+# Cek apakah 'history' sudah ada di memori sesi, jika belum, buat list kosong
+if 'history' not in st.session_state:
+    st.session_state.history = []
+
 # =============================================================================
 # BACKEND FUNCTIONS
 # =============================================================================
@@ -46,6 +51,7 @@ user_inputs = {}
 for feature, help_text in zip(feature_names, help_texts):
     default_val = default_values.get(feature, 0.0)
     user_inputs[feature] = st.sidebar.number_input(f"Value for '{feature}'", value=default_val, format="%.5f", key=feature, help=help_text)
+
 # Prediction button is placed in the sidebar
 predict_button = st.sidebar.button('**Get Prediction**', type="primary", use_container_width=True)
 
@@ -61,21 +67,16 @@ tab_prediction, tab_attributes, tab_project = st.tabs(["📈 **Prediction Result
 with tab_prediction:
     st.header("Prediction Result from the AI Model")
     if predict_button:
-        # --- VALIDATION REVISION STARTS HERE ---
-        # Step 1: Create a list of inputs that are still 0.0, EXCEPT for 'Coarseness'
         empty_columns = [
             feature_name for feature_name, value in user_inputs.items() 
             if value == 0.0 and feature_name != 'Coarseness'
         ]
         
-        # Step 2: Check if any column (other than Coarseness) is empty
         if len(empty_columns) > 0:
-            # Step 3: If so, display a warning
             st.error(f"**Warning:** Please fill in all attributes (except Coarseness) for an accurate prediction. The following attributes are still set to 0.0:", icon="❗")
             for column in empty_columns:
                 st.markdown(f"- **{column}**")
         else:
-            # Step 4: If all other columns are filled, run the prediction
             if model is not None and scaler is not None:
                 input_df = pd.DataFrame([user_inputs])
                 input_df = input_df[feature_names]
@@ -84,14 +85,25 @@ with tab_prediction:
                 prediction_proba = model.predict_proba(input_scaled)
 
                 if prediction[0] == 1:
-                    st.error("### Result: Brain Tumor Indicated", icon="⚠️")
+                    result_text = "Brain Tumor Indicated"
                     confidence = prediction_proba[0][1] * 100
+                    st.error(f"### Result: {result_text}", icon="⚠️")
                 else:
-                    st.success("### Result: No Brain Tumor Indicated", icon="✅")
+                    result_text = "No Brain Tumor Indicated"
                     confidence = prediction_proba[0][0] * 100
+                    st.success(f"### Result: {result_text}", icon="✅")
 
                 st.metric(label="Model Confidence Level", value=f"{confidence:.2f}%")
                 st.progress(int(confidence))
+
+                # --- PENAMBAHAN BARU 2: Simpan Hasil ke Riwayat ---
+                history_entry = {
+                    "inputs": input_df.copy(),
+                    "result": result_text,
+                    "confidence": confidence,
+                    "id": len(st.session_state.history) + 1
+                }
+                st.session_state.history.insert(0, history_entry)
 
                 with st.expander("View Processed Data Details"):
                     st.write("Initial Input Data:")
@@ -100,9 +112,26 @@ with tab_prediction:
                     st.dataframe(pd.DataFrame(input_scaled, columns=feature_names))
             else:
                 st.error("Model could not be loaded. Please check your .pkl files.")
-        # --- END OF VALIDATION REVISION ---
     else:
         st.info("Please enter all attribute values in the left panel and click the 'Get Prediction' button.")
+
+    # --- PENAMBAHAN BARU 3: Tampilkan Riwayat Prediksi ---
+    st.divider()
+    st.header("Prediction History (This Session)")
+
+    # Tombol untuk membersihkan riwayat
+    if st.button("Clear History"):
+        st.session_state.history = []
+        st.rerun() # Muat ulang halaman agar tampilan riwayat kosong
+
+    if not st.session_state.history:
+        st.info("No prediction history for this session yet.")
+    else:
+        # Tampilkan setiap entri riwayat
+        for entry in st.session_state.history:
+            with st.expander(f"History #{entry['id']} - Result: **{entry['result']}** ({entry['confidence']:.2f}%)"):
+                st.write("Input Data Used:")
+                st.dataframe(entry['inputs'])
 
 with tab_attributes:
     st.header("Attribute Glossary")
@@ -130,9 +159,7 @@ with tab_project:
     **Ferdi Setiawan**
                 
     **Muhammad Iqbal Arsyad. H** 
-                
+    
     **Pasma Azzahra**
-
+                
     **Tyara Hestyani Putri** """)
-
-
