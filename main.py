@@ -24,6 +24,7 @@ default_values = {
     'Mean': 6.535339, 'Variance': 619.587845, 'Standard Deviation': 24.891522, 'Entropy': 0.109059,
     'Skewness': 4.276477, 'Kurtosis': 18.900575, 'Contrast': 98.613971, 'Energy': 0.293314,
     'ASM': 0.086033, 'Homogeneity': 0.530941, 'Dissimilarity': 4.473346, 'Correlation': 0.981939, 'Coarseness': 0.0
+}
 # =============================================================================
 # SIDEBAR (FOR INPUTS)
 # =============================================================================
@@ -133,4 +134,5 @@ with tab_project:
     **Pasma Azzahra**
 
     **Tyara Hestyani Putri** """)
+
 
